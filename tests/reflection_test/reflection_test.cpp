@@ -551,6 +551,22 @@ suite meta_schema_reflection_tests = [] {
    };
 };
 
+struct c_style_array_t
+{
+   uint32_t arr[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+};
+
+suite c_style_array_tests = [] {
+   "c_style_array_t"_test = [] {
+      c_style_array_t obj{};
+      expect(!glz::read_json(obj, R"({"arr":[9, 9, 9]})"));
+      expect(obj.arr[0] == 9);
+      expect(obj.arr[1] == 9);
+      expect(obj.arr[2] == 9);
+      expect(obj.arr[3] == 4);
+   };
+};
+
 int main()
 { // Explicitly run registered test suites and report errors
    // This prevents potential issues with thread local variables

@@ -21,16 +21,16 @@ namespace glz
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Weverything"
          template <class T>
-            requires(!std::same_as<T, const char*> && !std::same_as<T, std::nullptr_t>)
+         requires(!std::same_as<T, const char*> && !std::same_as<T, std::nullptr_t>)
          [[maybe_unused]] constexpr operator T();
 #pragma clang diagnostic pop
 #elif defined(_MSC_VER)
          template <class T>
-            requires(!std::same_as<T, const char*> && !std::same_as<T, std::nullptr_t>)
+         requires(!std::same_as<T, const char*> && !std::same_as<T, std::nullptr_t>)
          [[maybe_unused]] constexpr operator T();
-
+         
          template <class T>
-            requires(is_specialization_v<T, std::optional>)
+         requires(is_specialization_v<T, std::optional>)
          [[maybe_unused]] constexpr operator T()
          {
             return std::nullopt;
@@ -39,16 +39,16 @@ namespace glz
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
          template <class T>
-            requires(!std::same_as<T, const char*> && !std::same_as<T, std::nullptr_t>)
+         requires(!std::same_as<T, const char*> && !std::same_as<T, std::nullptr_t>)
          [[maybe_unused]] constexpr operator T();
 #pragma GCC diagnostic pop
 #endif
-
+         
          [[maybe_unused]] constexpr operator std::string_view() { return {}; }
       };
-
+      
       template <class T, class... Args>
-         requires(std::is_aggregate_v<std::remove_cvref_t<T>>)
+      requires(std::is_aggregate_v<std::remove_cvref_t<T>>)
       inline constexpr auto count_members = [] {
          using V = std::remove_cvref_t<T>;
          if constexpr (requires { V{{Args{}}..., {any_t{}}}; } == false) {
@@ -58,9 +58,9 @@ namespace glz
             return count_members<V, Args..., any_t>;
          }
       }();
-
+      
       template <class T, size_t N = count_members<T>>
-         requires(N <= 128)
+      requires(N <= 128)
       constexpr decltype(auto) to_tuple(T&& t)
       {
          if constexpr (N == 0) {
@@ -1310,7 +1310,7 @@ namespace glz
                             p123, p124, p125, p126, p127);
          }
       }
-
+      
       template <class T>
       struct ptr_t final
       {
@@ -1321,7 +1321,14 @@ namespace glz
       constexpr auto get_ptr(T&& t) noexcept
       {
          decltype(auto) p = std::get<N>(to_tuple(t));
-         return ptr_t<std::decay_t<decltype(p)>>{&p};
+         using V = std::decay_t<decltype(p)>;
+         if constexpr (std::is_pointer_v<V>) {
+            static_assert("Glaze does not support raw c-style arrays with reflection");
+            //return ptr_t<V>{p};
+         }
+         else {
+            return ptr_t<V>{&p};
+         }
       }
    }
 }
