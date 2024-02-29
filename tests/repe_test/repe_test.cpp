@@ -135,6 +135,23 @@ suite repe_tests = [] {
              R"([[0,0,0,"modify",null],{"hello":"a, 5, 3.140000, W","world":"this is a neat place"}])")
          << server.response;
    };
+   
+   "no_params"_test = [] {
+      repe::registry server{};
+
+      server.on("get_hello", [&](std::string& result) {
+         result = "hello";
+      });
+      
+      {
+         auto request = repe::request_json({"get_hello"});
+         server.call(request);
+      }
+      
+      expect(server.response ==
+             R"([[0,0,0,"get_hello",null],"hello"])")
+         << server.response;
+   };
 };
 
 struct my_functions_t
